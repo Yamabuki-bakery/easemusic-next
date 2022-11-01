@@ -3,22 +3,68 @@ import Image from 'next/image'
 import styles from '../styles/Home.module.css'
 import { useState } from 'react';
 import React from 'react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import toast, { Toaster } from "react-hot-toast";
 import Song from '../datatype/Song'
 import useSWR from 'swr'
 import { getDetails, getAudio, getIDwithRe } from '../requests/netease'
-
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+import { useRouter } from 'next/router';
+import { useStateCallback } from '../datatype/useStateCallback';
 
 
 export default function Home() {
-  const [song, setSong] = useState(new Song(0))
+  const [song, setSong] = useStateCallback(new Song(0))
   const [loading, setLoading] = useState(false)
   const [searchBoxText, setSearchBoxText] = useState("");
+  const overLoad = useRef(false)
+  const startUp = useRef(true)
+  const router = useRouter()
 
-  async function clickAoButton(searchStr: String = searchBoxText) {
+  useEffect(
+    () => {
+      if (router.isReady && router.query.id && router.query.id !== song.id && !loading) {
+        //console.log(`Going to new dest! ${router.asPath}`)
+        console.log(
+          `檢測到導航 ${router.asPath} `
+        )
+        clickAoButton(router.query.id, false)
+        //startUp.current = false
+        //startUp.current = false
+      }else if (router.isReady && router.query.id && router.query.id !== song.id && loading) {
+        overLoad.current = true
+      }
+    },
+    [router.query]
+  )
+  useEffect(
+    () => {
+      //console.log(!router.query)
+      if (router.isReady && !router.query.id && startUp.current) {
+        let lastSong = localStorage.getItem('last-song')
+        console.log(`last song is ${lastSong}`)
+        startUp.current = false
+        clickAoButton(lastSong)
+      }
+    }
+  )
+  useEffect(
+    () => {
+      if (overLoad.current) {
+        console.log(
+          `點太多前進後退了，這是最後一個 ${router.asPath} `
+        )
+        clickAoButton(router.query.id, false)
+        overLoad.current = false
+      }
+    },
+    [loading]
+  )
+
+
+  async function clickAoButton(
+    searchStr: String = searchBoxText,
+    pushHistory = true
+    ) {
     //console.log(searchStr);
     console.log(`it is ${searchStr}`)
     let songID = getIDwithRe(searchStr);
@@ -37,13 +83,32 @@ export default function Home() {
     setLoading(true)
     const detailTask = getDetails(newSong)
     const audioTask = getAudio(newSong)
+    setSearchBoxText(newSong.id)
     try {
       newSong = await detailTask
       await audioTask
-      setSong(newSong)
-      setSearchBoxText(newSong.id)
+      setSong(newSong, function (_) {
+        if (pushHistory) {
+          router.push(
+            {
+              pathname: router.pathname,
+              query: {
+                id: newSong.id
+              }
+            },
+            undefined,
+            {
+              shallow: false,
+            }
+          )
+        }
+        localStorage.setItem('last-song', newSong.id)
+        console.log(`last song set ${newSong.id}`)
+      })
+
     } catch (error) {
       console.error(error)
+      toast.error(error)
     }
     setLoading(false)
   }
