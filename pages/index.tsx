@@ -27,7 +27,10 @@ export default function Home() {
         console.log(
           `檢測到導航 ${router.asPath} `
         )
-        clickAoButton(router.query.id, false)
+        if (typeof router.query.id === 'string') {
+          clickAoButton(router.query.id, false)
+        }
+
         //startUp.current = false
         //startUp.current = false
       }else if (router.isReady && router.query.id && router.query.id !== song.id && loading) {
@@ -53,7 +56,9 @@ export default function Home() {
         console.log(
           `點太多前進後退了，這是最後一個 ${router.asPath} `
         )
-        clickAoButton(router.query.id, false)
+        if (typeof router.query.id === 'string') {
+          clickAoButton(router.query.id, false)
+        }
         overLoad.current = false
       }
     },
@@ -62,7 +67,7 @@ export default function Home() {
 
 
   async function clickAoButton(
-    searchStr: String = searchBoxText,
+    searchStr: String|string = searchBoxText,
     pushHistory = true
     ) {
     //console.log(searchStr);
