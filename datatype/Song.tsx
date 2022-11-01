@@ -1,13 +1,13 @@
 export default class Song {
-    id: String
+    id: string
     exist: boolean
-    name: String
-    artist: String
+    name: string
+    artist: string
     album
     albumPicUrl
     vip
     flac
-    lyrics: String
+    lyrics: string
     mp3Url
     flacUrl
     available
