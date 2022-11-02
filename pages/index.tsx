@@ -10,6 +10,9 @@ import useSWR from 'swr'
 import { getDetails, getAudio, getIDwithRe } from '../requests/netease'
 import { useRouter } from 'next/router';
 import { useStateCallback } from '../datatype/useStateCallback';
+import Button from 'react-bootstrap/Button';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
+import Dropdown from 'react-bootstrap/Dropdown';
 
 
 export default function Home() {
@@ -33,7 +36,7 @@ export default function Home() {
 
         //startUp.current = false
         //startUp.current = false
-      }else if (router.isReady && router.query.id && router.query.id !== song.id && loading) {
+      } else if (router.isReady && router.query.id && router.query.id !== song.id && loading) {
         overLoad.current = true
       }
     },
@@ -67,22 +70,22 @@ export default function Home() {
 
 
   async function clickAoButton(
-    searchStr: String|string = searchBoxText,
+    searchStr: String | string = searchBoxText,
     pushHistory = true
-    ) {
+  ) {
     //console.log(searchStr);
     console.log(`it is ${searchStr}`)
     let songID = getIDwithRe(searchStr);
     if (!songID) {
       // 輸入的過於惡俗
-    toast.error('輸入的 連結 或 ID 過於 惡俗！')
+      toast.error('輸入的 連結 或 ID 過於 惡俗！')
 
       return;
     } else if (songID === song.id) {
       return;
     }
     let newSong = new Song(songID);
-  
+
     // addState(songID);
     // loadSongData(song)
     setLoading(true)
@@ -122,18 +125,18 @@ export default function Home() {
     <div className={styles.container}>
       <PageHead />
 
-      <Header 
-        clickAoButton={ clickAoButton }
-        isLoading={ loading }
-        searchBoxText= {searchBoxText}
-        setText = {setSearchBoxText}
+      <Header
+        clickAoButton={clickAoButton}
+        isLoading={loading}
+        searchBoxText={searchBoxText}
+        setText={setSearchBoxText}
       />
-      
+
       <Toaster toastOptions={{ position: "top-center" }} />
       <main className='container'>
-        <SongInfo 
-          song={ song }
-          isLoading={ loading }
+        <SongInfo
+          song={song}
+          isLoading={loading}
         />
       </main>
     </div>
@@ -153,8 +156,14 @@ function Header({ clickAoButton, isLoading, searchBoxText, setText }) {
               <span className="fs-4" id="logoText">神必服務</span>
             </a>
 
-            <form className="col-10 col-lg-8" onSubmit={() => false}>
-              <input id="searchBox" type="text" className="form-control form-control-dark" placeholder="ID or 網易雲分享 複製連結..." 
+            <form className="col-10 col-lg-8" onSubmit={(e) => {
+              e.preventDefault()
+              if (isLoading) {
+                return false
+              }
+              clickAoButton()
+            }}>
+              <input id="searchBox" type="text" className="form-control form-control-dark" placeholder="ID or 網易雲分享 複製連結..."
                 value={searchBoxText}
                 onChange={(e) => setText(e.target.value)}
               />
@@ -163,9 +172,9 @@ function Header({ clickAoButton, isLoading, searchBoxText, setText }) {
             <div className="col-2 col-lg-2 ">
               {
                 isLoading ?
-                <button id="aoButton" type="button" className="btn btn-primary" onClick={() => clickAoButton()} disabled>Loading</button>
-                :
-                <button id="aoButton" type="button" className="btn btn-primary" onClick={() => clickAoButton()}>ao</button>
+                  <button id="aoButton" type="button" className="btn btn-primary" onClick={() => clickAoButton()} disabled>Loading</button>
+                  :
+                  <button id="aoButton" type="button" className="btn btn-primary" onClick={() => clickAoButton()}>ao</button>
               }
             </div>
 
@@ -177,7 +186,7 @@ function Header({ clickAoButton, isLoading, searchBoxText, setText }) {
   )
 }
 
-function PageHead(){
+function PageHead() {
   return (
     <Head>
       <title>網易雲音 Le</title>
@@ -195,109 +204,114 @@ function PageHead(){
   )
 }
 
-function SongInfo({ song, isLoading }: {song: Song, isLoading: boolean}){
+function SongInfo({ song, isLoading }: { song: Song, isLoading: boolean }) {
 
   return (
     <div className="container">
-    <div className="row">
-      {/*<!--專輯圖片和信息-->*/}
-      <div className="col-lg-4 mb-3">
+      <div className="row">
+        {/*<!--專輯圖片和信息-->*/}
+        <div className="col-lg-4 mb-3">
 
-        <div className="row">
-          {/*<!--專輯圖片-->*/}
-          <div className="col-6 col-lg album-pic" >
-            <img id='albumPicArea' src={song.albumPicUrl || "/public/bootstrap-stack.webp"} className="img-fluid" />
+          <div className="row align-items-center justify-content-center">
+            {/*<!--專輯圖片-->*/}
+            <div className="col-6 col-lg-12 album-pic" >
+              <img id='albumPicArea' src={song.albumPicUrl || "/public/bootstrap-stack.webp"} className="img-fluid" />
+            </div>
 
-          </div>
-          {/*<!--換 col 行然後歌曲信息-->*/}
-          <div className=""></div>
-          <div className="col mb-3">
-            <ul className="list-group song-info">
-              <li className="list-group-item" id='song-name'>
-                {song.name  ? `🎶 ${song.name}` : 'A disabled item' }
-              </li>
-              <li className="list-group-item" id='song-artist'>
-                {song.artist ? `🧑‍🎤 ${song.artist}` : 'A second item'}
-              </li>
-              <li className="list-group-item" id='song-album'>
-                {song.album ? `📀 ${song.album}` : 'A third item'}
-              </li>
-              <li className="list-group-item" id='song-vip'>
-                {song.vip ? '🔐 VIP ✅ yes' : '🔐 VIP ❌ no'}
-              </li>
-              <li className="list-group-item" id='song-flac'>
-                {song.flacUrl ? '🎧 FLAC ✅' : '🎧 FLAC 🈚️'}
-              </li>
-            </ul>
-          </div>
-          <div className=""></div>
+            {/*<!--換 col 行然後歌曲信息-->*/}
+            <div className=""></div>
 
-          <div className="col-4 ms-3 form-check form-switch">
-            <input className="form-check-input" type="checkbox" id="flacSwitch" disabled={isLoading||(!song.flacUrl)}  />
+            <div className="col mb-3">
+              <ul className="list-group song-info">
+                <li className="list-group-item" id='song-name'>
+                  {song.name ? `🎶 ${song.name}` : 'A disabled item'}
+                </li>
+                <li className="list-group-item" id='song-artist'>
+                  {song.artist ? `🧑‍🎤 ${song.artist}` : 'A second item'}
+                </li>
+                <li className="list-group-item" id='song-album'>
+                  {song.album ? `📀 ${song.album}` : 'A third item'}
+                </li>
+                <li className="list-group-item" id='song-vip'>
+                  {song.vip ? '🔐 VIP ✅ yes' : '🔐 VIP ❌ no'}
+                </li>
+                <li className="list-group-item" id='song-flac'>
+                  {song.flacUrl ? '🎧 FLAC ✅' : '🎧 FLAC 🈚️'}
+                </li>
+              </ul>
+            </div>
+
+            <div className=""></div>
+
+            <div className="col-4 form-check form-switch">
+              <input className="form-check-input" type="checkbox" id="flacSwitch" disabled={isLoading || (!song.flacUrl)} />
               <label className="form-check-label" htmlFor="flacSwitch">FLAC</label>
-          </div>
+            </div>
 
-          <div className="col-7 btn-group">
+            <DownloadButtons
+              song={song}
+              isLoading={isLoading}
+            />
 
-            <button type="button" className="btn btn-primary" id="downButton" disabled={isLoading}>
-              {isLoading ? 'Loading' : 'Download'}
-            </button>
+            <div className=""></div>
 
-            <button type="button" className="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
-              <span className="visually-hidden">Toggle Dropdown</span>
-            </button>
-
-            <ul className="dropdown-menu">
-              <li><a className="dropdown-item" id="curlDownButton" >Download via curl</a></li>
-              <li><a className="dropdown-item" id="wgetDownButton">Download via wget</a></li>
-            </ul>
-          </div>{/*<!-- /btn-group -->*/}
-          <div className="mb-3"></div>
-
-          <div className="btn-group">
-
-            <button type="button" className="btn btn-danger" id="openAppBtn">🔗Open in App</button>
+            <div className='col-12'>
+              <button type="button" className="btn btn-danger" id="openAppBtn">🔗Open in App</button>
+            </div>
 
           </div>
-
         </div>
-      </div>
-      {/*<!--歌詞-->*/}
-      <div className="col-lg-8">
+        {/*<!--歌詞-->*/}
+        <div className="col-lg-8">
 
-        <div className="row">
+          <div className="row">
 
-          <div className="col-9" >
-            <audio controls className='w-100' preload="auto"
-              src={song.mp3Url} id='player'></audio>
-          </div>
+            <div className="col-9" >
+              <audio controls className='w-100' preload="auto"
+                src={song.mp3Url} id='player'></audio>
+            </div>
 
-          <div className="col-12">
-            <div className="card">
-              <div className="card-header">
-                歌詞
-              </div>
-              <div className="card-body">
-                <button id="lyricButton" type="button" className="btn btn-primary" disabled={!!song.lyrics} >下載歌詞 (.lrc)</button>
-                <p className="card-text" id="lyricArea" style={{whiteSpace: 'pre-wrap'}}>
-                  {
-                    song.lyrics ?
-                    song.lyrics
-                    :
-                    "Some quick example text to build on the card title and make up the bulk of the card's content."
-                  }
-                </p>
+            <div className="col-12">
+              <div className="card">
+                <div className="card-header">
+                  歌詞
+                </div>
+                <div className="card-body">
+                  <button id="lyricButton" type="button" className="btn btn-primary" disabled={!!song.lyrics} >下載歌詞 (.lrc)</button>
+                  <p className="card-text" id="lyricArea" style={{ whiteSpace: 'pre-wrap' }}>
+                    {
+                      song.lyrics ?
+                        song.lyrics
+                        :
+                        "Some quick example text to build on the card title and make up the bulk of the card's content."
+                    }
+                  </p>
+                </div>
               </div>
             </div>
+
           </div>
 
         </div>
-
       </div>
+
     </div>
 
-  </div>
-
   )
+}
+
+function DownloadButtons({ song, isLoading }: { song: Song, isLoading: boolean }) {
+  return (
+    <Dropdown as={ButtonGroup} className="col-8 mb-1">
+      <Button variant="primary" disabled={isLoading}>{isLoading ? 'Loading' : 'Download'}</Button>
+
+      <Dropdown.Toggle split variant="primary" id="dropdown-split-basic" disabled={isLoading} />
+
+      <Dropdown.Menu>
+        <Dropdown.Item >Download via curl</Dropdown.Item>
+        <Dropdown.Item >Download via wget</Dropdown.Item>
+      </Dropdown.Menu>
+    </Dropdown>
+  );
 }
 
